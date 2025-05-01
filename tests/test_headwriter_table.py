@@ -21,20 +21,22 @@ except (ImportError, SystemError):
     # Fall back to manually loading the font_patcher script like a barbarian
 
     import importlib.util
+    import importlib.machinery
 
     # Construct the path to the font-patcher script (with no .py)
     FONT_PATCHER_PATH = ROOT_PATH / "font-patcher"
 
     # Create a module spec pretending that font-patcher is a real Python module
-    spec = importlib.util.spec_from_file_location(
-        "font_patcher", FONT_PATCHER_PATH)
+    loader = importlib.machinery.SourceFileLoader(
+        "font_patcher", str(FONT_PATCHER_PATH))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
     if not spec or not spec.loader:
         raise ImportError(
             "Plan B has failed. There is no Plan C. You are now officially doomed. Check to make sure the 'font-patcher' script exists.")
 
     # Load the module like a sorcerer
     font_patcher = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(font_patcher)
+    loader.exec_module(font_patcher)
 
     # Font-patcher has now been imported through witchcraft!
 
@@ -47,9 +49,27 @@ def tmp_font() -> Generator[str, Any, Any]:
     """
     Copy a TTF font into a temp file so each test starts with a clean slate
     """
-    src = ROOT_PATH / "src/unpatched/Hack/Regular/Hack-Regular.ttf"
+    src = ROOT_PATH / "src/unpatched-fonts/Hack/Regular/Hack-Regular.ttf"
     td = tempfile.NamedTemporaryFile(suffix=".ttf", delete=False)
     td.close()
     shutil.copy(src, td.name)
     yield td.name
     Path(td.name).unlink()
+
+# -----------------------------------
+# Tests for correctness
+# ------------------------------------
+
+
+def test_get_and_put_long(tmp_font: str) -> None:
+    writer = TableHEADWriter(tmp_font)
+    orig = writer.getlong('checksumAdjustment')
+    test_val = 0x12345678
+
+    writer.putlong(test_val, 'checksumAdjustment')
+    writer.f.flush()
+
+    # reopen to avoid any in-memory cachign
+    writer2 = TableHEADWriter(tmp_font)
+    new = writer2.getlong('checksumAdjustment')
+    assert new == test_val
