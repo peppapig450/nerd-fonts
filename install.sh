@@ -15,7 +15,7 @@ installpath="user"
 usage() {
   cat << EOF
 Usage: ./install.sh [-q -v -h] [[--copy | --link] --clean | --list | --remove]
-                    [--mono] [--windows] [--otf | --ttf]
+                    [--mono] [--use-proportional-glyphs] [--otf | --ttf]
                     [--install-to-user-path | --install-to-system-path ]
                     [FONT...]
 
@@ -44,8 +44,6 @@ General options:
 
   -O, --otf                     Prefer OTF font files [default].
   -T, --ttf                     Prefer TTF font files.
-
-                                (*) Feature will not work anymore
 EOF
 }
 
@@ -55,7 +53,7 @@ version() {
 }
 
 # Parse options
-optspec=":qvhclLCspOTSU-:"
+optspec=":qvhclLCspOTUS-:"
 while getopts "$optspec" optchar; do
   case "${optchar}" in
 
