@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Install Nerd Fonts
-__ScriptVersion="0.9"
+__ScriptVersion="1.0"
 
 # Default values for option variables:
 quiet=false
 mode="copy"
 clean=false
 dry=false
-extension="otf"
+extension1="otf"
+extension2="ttf"
 variant="R"
 installpath="user"
 
@@ -68,8 +69,8 @@ while getopts "$optspec" optchar; do
     C) clean=true;;
     s) variant="M";;
     p) variant="P";;
-    O) extension="otf";;
-    T) extension="ttf";;
+    O) extension1="otf"; extension2="ttf";;
+    T) extension1="ttf"; extension2="otf";;
     S) installpath="system";;
     U) installpath="user";;
 
@@ -87,8 +88,8 @@ while getopts "$optspec" optchar; do
         clean) clean=true;;
         mono) variant="M";;
         use-proportional-glyphs) variant="P";;
-        otf) extension="otf";;
-        ttf) extension="ttf";;
+        otf) extension1="otf"; extension2="ttf";;
+        ttf) extension1="ttf"; extension2="otf";;
         install-to-system-path) installpath="system";;
         install-to-user-path) installpath="user";;
         *)
@@ -147,7 +148,11 @@ collect_files() {
   # Find all the font files, return \0 separated list
   local find_opts="${find_filter} -print0"
   while IFS= read -d / -r dir; do
-    xargs -- find "${nerdfonts_root_dir}/${dir}" -iname '*.[ot]tf' -type f <<< "$find_opts"
+    if [ -n "$(xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension1}" -type f <<< "$find_filter")" ]; then
+      xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension1}" -type f <<< "$find_opts"
+    else
+      xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension2}" -type f <<< "$find_opts"
+    fi
   done <<< "${nerdfonts_dirs}"
 }
 
