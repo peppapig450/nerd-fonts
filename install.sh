@@ -157,18 +157,13 @@ else
   find_filter="-not -name '*NerdFontMono*' -and -not -name '*NerdFontPropo*' -and -name '*NerdFont*'"
 fi
 
-# Construct directories to be searched
-implode find_dirs "\" \"" "${nerdfonts_dirs[@]}"
-find_dirs="\"$find_dirs\""
-
-# Put it all together into the find command we want
-find_command="find $find_dirs -iname '*.[ot]tf' $find_filter -type f -print0"
-
 # Find all the font files and store in array
 files=()
-while IFS=  read -r -d $'\0'; do
-  files+=("$REPLY")
-done < <(eval "$find_command")
+for dir in "${nerdfonts_dirs[@]}"; do
+  while IFS=  read -r -d $'\0'; do
+    files+=("$REPLY")
+  done < <(echo "${find_filter} -print0" | xargs -- find "${dir}" -iname '*.[ot]tf' -type f)
+done
 
 #
 # Remove duplicates (i.e. when both otf and ttf version present)
