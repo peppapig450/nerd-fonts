@@ -113,7 +113,8 @@ shift $((OPTIND-1))
 version
 
 # Set source and target directories, default: all fonts
-nerdfonts_root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/patched-fonts"
+sd="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
+nerdfonts_root_dir="${sd}/patched-fonts"
 nerdfonts_dirs=("$nerdfonts_root_dir")
 
 # Accept font / directory names, to avoid installing all fonts
@@ -124,7 +125,7 @@ if [ -n "$*" ]; then
       # Ensure that directory exists, and offer suggestions if not
       if [[ ! -d "$nerdfonts_root_dir/$font" ]]; then
         echo -e "Font $font doesn't exist. Options are: \\n"
-        find "$nerdfonts_root_dir" -maxdepth 1 -type d \( \! -name "$(basename "$nerdfonts_root_dir")" \) -exec basename {} \;
+        find "$nerdfonts_root_dir" -maxdepth 1 -type d \( \! -name "$(basename "$nerdfonts_root_dir")" \) -exec basename {} \; | sort
         exit 255
       fi
       nerdfonts_dirs=( "${nerdfonts_dirs[@]}" "$nerdfonts_root_dir/$font" )
