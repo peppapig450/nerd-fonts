@@ -136,18 +136,6 @@ fi
 #
 # Start constructing `find` expression
 #
-implode() {
-    # $1 is return variable name
-    # $2 is sep
-    # $3... are the elements to join
-    local retname=$1 sep=$2 ret=$3
-    shift 3 || shift $(($#))
-    while [ $# -gt 0 ]; do
-        ret=$ret$sep$1
-        shift
-    done
-    printf -v "$retname" "%s" "$ret"
-}
 
 # Which Nerd Font variant
 if [ "$variant" = "M" ]; then
