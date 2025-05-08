@@ -123,17 +123,13 @@ if [ -n "$*" ]; then
       # Ensure that directory exists, and offer suggestions if not
       if [[ ! -d "$nerdfonts_root_dir/$font" ]]; then
         echo -e "Font $font doesn't exist. Options are: \\n"
-        find "$nerdfonts_root_dir" -maxdepth 1 -type d \( \! -name "$(basename "$nerdfonts_root_dir")" \) -exec basename {} \; | sort
+        find "$nerdfonts_root_dir" -mindepth 1 -maxdepth 1 -type d -printf "%f\\n" | sort
         exit 255
       fi
       nerdfonts_dirs=( "${nerdfonts_dirs[@]}" "$nerdfonts_root_dir/$font" )
     fi
   done
 fi
-
-#
-# Start constructing `find` expression
-#
 
 # Which Nerd Font variant
 if [ "$variant" = "M" ]; then
@@ -205,6 +201,15 @@ if [ "${#files[@]}" -eq 0 ]; then
   exit 1
 fi
 
+prepare_dirs() {
+  if [ "$clean" = true ]; then
+    [ "$quiet" = false ] && rm -rfv "$font_dir"
+    [ "$quiet" = true ] && rm -rf "$font_dir"
+  fi
+  [ "$quiet" = false ] && mkdir -pv "$font_dir"
+  [ "$quiet" = true ] && mkdir -p "$font_dir"
+}
+
 #
 # Take the desired action
 #
@@ -218,23 +223,16 @@ case $mode in
     exit 0
     ;;
 
-  copy | link)
-    if [ "$clean" = true ]; then
-      [ "$quiet" = false ] && rm -rfv "$font_dir"
-      [ "$quiet" = true ] && rm -rf "$font_dir"
-    fi
-    [ "$quiet" = false ] && mkdir -pv "$font_dir"
-    [ "$quiet" = true ] && mkdir -p "$font_dir"
-    case $mode in
-      copy)
-        [ "$quiet" = false ] && cp -fv "${files[@]}" "$font_dir"
-        [ "$quiet" = true ] && cp -f "${files[@]}" "$font_dir"
-        ;;
-      link)
-        [ "$quiet" = false ] && ln -sfv "${files[@]}" "$font_dir"
-        [ "$quiet" = true ] && ln -sf "${files[@]}" "$font_dir"
-        ;;
-    esac;;
+  copy)
+    prepare_dirs
+    [ "$quiet" = false ] && cp -fv "${files[@]}" "$font_dir"
+    [ "$quiet" = true ] && cp -f "${files[@]}" "$font_dir"
+    ;;
+  link)
+    prepare_dirs
+    [ "$quiet" = false ] && ln -sfv "${files[@]}" "$font_dir"
+    [ "$quiet" = true ] && ln -sf "${files[@]}" "$font_dir"
+    ;;
 
   remove)
     if [[ "true" == "$dry" ]]; then
