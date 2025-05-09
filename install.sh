@@ -62,6 +62,7 @@ EOF
 # Print version
 version() {
   echo "Nerd Fonts installer -- Version $__ScriptVersion"
+  echo "                     -- Bash ${BASH_VERSION}"
 }
 
 # Parse options
