@@ -2,6 +2,15 @@
 # Install Nerd Fonts
 __ScriptVersion="1.0"
 
+# This script must run with bash 3
+# In fact it is checked against `checkbashisms` and no bashisms are
+# used, except (because the workarounds are too involved):
+#
+# - <( ) process substitution
+# - read -d option
+# - $'\0' to supply a nullbyte to read -d
+# - <<< here-string
+
 # Default values for option variables:
 quiet=false
 mode="copy"
@@ -121,12 +130,13 @@ if [ -n "$*" ]; then
   for font in "${@}"; do
     if [ -n "$font" ]; then
       # Ensure that directory exists, and offer suggestions if not
-      if [[ ! -d "$nerdfonts_root_dir/$font" ]]; then
-        echo -e "Font $font doesn't exist. Options are: \\n"
+      if [ ! -d "$nerdfonts_root_dir/$font" ]; then
+        echo "Font $font doesn't exist. Options are:"
+        echo
         find "$nerdfonts_root_dir" -mindepth 1 -maxdepth 1 -type d -printf "%f\\n" | sort
         exit 255
       fi
-      nerdfonts_dirs+="${font}/"
+      nerdfonts_dirs="${nerdfonts_dirs}${font}/"
     fi
   done
 else
@@ -146,18 +156,17 @@ fi
 
 collect_files() {
   # Find all the font files, return \0 separated list
-  local find_opts="${find_filter} -print0"
   while IFS= read -d / -r dir; do
-    if [ -n "$(xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension1}" -type f <<< "$find_filter")" ]; then
-      xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension1}" -type f <<< "$find_opts"
+    if [ -n "$(echo "${find_filter}" | xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension1}" -type f)" ]; then
+      echo "${find_filter} -print0" | xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension1}" -type f
     else
-      xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension2}" -type f <<< "$find_opts"
+      echo "${find_filter} -print0" | xargs -- find "${nerdfonts_root_dir}/${dir}" -iname "*.${extension2}" -type f
     fi
   done <<< "${nerdfonts_dirs}"
 }
 
 # Get target root directory
-if [[ $(uname) == 'Darwin' ]]; then
+if [ "$(uname)" = "Darwin" ]; then
   # MacOS
   sys_share_dir="/Library"
   usr_share_dir="$HOME/Library"
@@ -174,7 +183,7 @@ fi
 sys_font_dir="${sys_share_dir}/${font_subdir}/NerdFonts"
 usr_font_dir="${usr_share_dir}/${font_subdir}/NerdFonts"
 
-if [[ "system" == "$installpath" ]]; then
+if [ "system" = "$installpath" ]; then
   font_dir="${sys_font_dir}"
 else
   font_dir="${usr_font_dir}"
@@ -219,7 +228,7 @@ case $mode in
     ;;
 
   remove)
-    if [[ "true" == "$dry" ]]; then
+    if [ "true" = "$dry" ]; then
       echo "Dry run. Would issue these commands:"
       [ "$quiet" = false ] && echo rm -rfv "$sys_font_dir" "$usr_font_dir"
       [ "$quiet" = true ] && echo rm -rf "$sys_font_dir" "$usr_font_dir"
@@ -233,8 +242,8 @@ case $mode in
 esac
 
 # Reset font cache on Linux
-if [[ -n $(command -v fc-cache) ]]; then
-  if [[ "true" == "$dry" ]]; then
+if [ -n "$(command -v fc-cache)" ]; then
+  if [ "true" = "$dry" ]; then
     [ "$quiet" = false ] && echo fc-cache -vf "$font_dir"
     [ "$quiet" = true ] && echo fc-cache -f "$font_dir"
   else
