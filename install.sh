@@ -10,6 +10,8 @@ __ScriptVersion="1.0"
 # - read -d option
 # - $'\0' to supply a nullbyte to read -d
 # - <<< here-string
+#
+# Note that `find` on MacOS does not know `-printf`
 
 # Default values for option variables:
 quiet=false
@@ -133,14 +135,14 @@ if [ -n "$*" ]; then
       if [ ! -d "$nerdfonts_root_dir/$font" ]; then
         echo "Font $font doesn't exist. Options are:"
         echo
-        find "$nerdfonts_root_dir" -mindepth 1 -maxdepth 1 -type d -printf "%f\\n" | sort
+        find "$nerdfonts_root_dir" -mindepth 1 -maxdepth 1 -type d -exec basename "{}" \; | sort
         exit 255
       fi
       nerdfonts_dirs="${nerdfonts_dirs}${font}/"
     fi
   done
 else
-  nerdfonts_dirs=$(cd "${nerdfonts_root_dir}" && find . -mindepth 1 -maxdepth 1 -type d -printf "%f/")
+  nerdfonts_dirs=$(find "${nerdfonts_root_dir}" -mindepth 1 -maxdepth 1 -type d -print0 | sed "s|${nerdfonts_root_dir}/||g" | tr '\0' '/')
 fi
 # nerdfonts_dirs contains a '/' separated list of directories directly
 # under nerdfonts_root_dir to look at (it needs to end in '/')
