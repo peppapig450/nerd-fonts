@@ -63,6 +63,8 @@ EOF
 version() {
   echo "Nerd Fonts installer -- Version $__ScriptVersion"
   echo "                     -- Bash ${BASH_VERSION}"
+  echo
+  echo "Deprecated tool: Will not work to get newer fonts as they are not inside the repo anymore."
 }
 
 # Parse options
