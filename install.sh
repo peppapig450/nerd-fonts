@@ -11,7 +11,7 @@ __ScriptVersion="1.0"
 # - $'\0' to supply a nullbyte to read -d
 # - <<< here-string
 #
-# Note that `find` on MacOS does not know `-printf`
+# Note that `find` on MacOS does not know `-printf` and cp/ln have no `-T` or `-t`
 
 # Default values for option variables:
 quiet=false
@@ -221,13 +221,13 @@ case $mode in
 
   copy)
     prepare_dirs
-    [ "$quiet" = false ] && (collect_files | xargs --null -- cp -fv -T "$font_dir")
-    [ "$quiet" = true ] && (collect_files | xargs --null -- cp -f  -T "$font_dir")
+    [ "$quiet" = false ] && (collect_files | xargs --null "-I{}" -- cp -fv "{}" "$font_dir")
+    [ "$quiet" = true ] && (collect_files | xargs --null "-I{}" -- cp -f "{}" "$font_dir")
     ;;
   link)
     prepare_dirs
-    [ "$quiet" = false ] && (collect_files | xargs --null -- ln -sfv -t "$font_dir")
-    [ "$quiet" = true ] && (collect_files | xargs --null -- ln -sf -t "$font_dir")
+    [ "$quiet" = false ] && (collect_files | xargs --null "-I{}" -- ln -sfv "{}" "$font_dir")
+    [ "$quiet" = true ] && (collect_files | xargs --null "-I{}" -- ln -sf "{}" "$font_dir")
     ;;
 
   remove)
