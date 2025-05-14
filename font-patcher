@@ -121,29 +121,31 @@ class TableHEADWriter:
         self.ptr = self._resolve_pos(where)
 
     def getlong(self, pos = None):
-        """ Get four bytes from the font file as integer number """
-        if pos:
-            self.goto(pos)
-        return (ord(self.f.read(1)) << 24) + (ord(self.f.read(1)) << 16) + (ord(self.f.read(1)) << 8) + ord(self.f.read(1))
+        """Get four bytes from the font buffer as an integer."""
+        off = self._resolve_pos(pos) if pos is not None else self.ptr
+        val = struct.unpack_from('>I', self.view, off)[0]
+        self.ptr = off + 4
+        return val
 
     def getshort(self, pos = None):
-        """ Get two bytes from the font file as integer number """
-        if pos:
-            self.goto(pos)
-        return (ord(self.f.read(1)) << 8) + ord(self.f.read(1))
+        """Get two bytes from the font buffer as an integer."""
+        off = self._resolve_pos(pos) if pos is not None else self.ptr
+        val = struct.unpack_from('>H', self.view, off)[0]
+        self.ptr = off + 2
+        return val
 
     def putlong(self, num, pos = None):
-        """ Put number as four bytes into font file """
-        if pos:
-            self.goto(pos)
-        self.f.write(bytearray([(num >> 24) & 0xFF, (num >> 16) & 0xFF ,(num >> 8) & 0xFF, num & 0xFF]))
+        """Put number as four bytes into font buffer."""
+        off = self._resolve_pos(pos) if pos is not None else self.ptr
+        struct.pack_into('>I', self.view, off, num & 0xFFFFFFFF)
+        self.ptr = off + 4
         self.modified = True
 
     def putshort(self, num, pos = None):
-        """ Put number as two bytes into font file """
-        if pos:
-            self.goto(pos)
-        self.f.write(bytearray([(num >> 8) & 0xFF, num & 0xFF]))
+        """Write two-byte integer into font buffer."""
+        off = self._resolve_pos(pos) if pos is not None else self.ptr
+        struct.pack_into('>H', self.view, off, num & 0xFFFF)
+        self.ptr = off + 2
         self.modified = True
 
     def calc_checksum(self, start, end, checksum = 0):
