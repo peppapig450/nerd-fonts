@@ -240,10 +240,14 @@ class TableHEADWriter:
         return full
 
     def calc_table_checksum(self, check = False):
-        tab_check_new = self.calc_checksum(self.tab_offset, self.tab_offset + self.tab_length - 1, (-self.checksum_adj) & 0xFFFFFFFF)
-        if check and tab_check_new != self.tab_check:
+        """Calculate just the HEAD table's checksum."""
+        init  = (-self.checksum_adj) & 0xFFFFFFFF
+        start = self.tab_offset
+        end   = start + self.tab_length - 1
+        new   = self.calc_checksum(start, end, init)
+        if check and new != self.tab_check:
             sys.exit("Checksum of 'head' in font is bad")
-        return tab_check_new
+        return new
 
     def reset_table_checksum(self):
         new_check = self.calc_table_checksum()
