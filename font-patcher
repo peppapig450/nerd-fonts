@@ -38,6 +38,16 @@ except ImportError:
             "[e.g. on Linux Debian or Ubuntu: `sudo apt install fontforge python3-fontforge`]"
         )
     )
+try:
+    import mmap
+    from mmap import mmap as MMapType
+    HAS_MMAP = True
+except ImportError:
+    mmap = None
+    HAS_MMAP = False
+    class DummyType:
+        pass
+    MMapType = DummyType
 
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'bin', 'scripts', 'name_parser'))
 try:
