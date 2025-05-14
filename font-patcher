@@ -221,8 +221,7 @@ class TableHEADWriter:
     def find_head_table(self, idx):
         """ Search all tables for the HEAD table and store its metadata """
         # Use font with index idx if this is a font collection file
-        found = self.find_table([ b'head' ], idx)
-        if not found:
+        if not self.find_table([ b'head' ], idx):
             raise Exception('No HEAD table found in font idx {}'.format(idx))
 
     def calc_full_checksum(self, check = False):
