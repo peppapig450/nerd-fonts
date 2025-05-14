@@ -148,6 +148,13 @@ class TableHEADWriter:
         self.ptr = off + 2
         self.modified = True
 
+    # TODO: this is still slow, numpy would make this gobs faster.
+    # A Cython, C extension, or Rust implementation would also work.
+    # So would some hacky technique to reduce the pure Python implementation,
+    #  such as removing the per-iteration mask, binding the mask and
+    # Struct('>I').unpack_from method to a local name and iterating  by offset
+    # avoids the cost of creating a generator object and tuple for each word.
+    # Tail-padding via left shift instead of ljust avoids an extra copy of the last few bytes.
     def calc_checksum(self, start, end, checksum = 0):
         """ Calculate a font table checksum, optionally ignoring another embedded checksum value (for table 'head') """
         mask = 0xFFFFFFFF
