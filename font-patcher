@@ -14,6 +14,7 @@ projectNameAbbreviation = "NF"
 projectNameSingular = projectName[:-1]
 
 import sys
+import struct
 import re
 import os
 import argparse
