@@ -59,6 +59,12 @@ except ImportError:
 
 class TableHEADWriter:
     """ Access to the HEAD table without external dependencies """
+    POSITIONS = {
+        'checksumAdjustment': 2+2+4,
+        'flags': 2+2+4+4+4,
+        'lowestRecPPEM': 2+2+4+4+4+2+2+8+8+2+2+2+2+2,
+        'avgWidth': 2,
+    }
     def getlong(self, pos = None):
         """ Get four bytes from the font file as integer number """
         if pos:
