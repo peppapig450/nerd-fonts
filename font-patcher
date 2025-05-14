@@ -110,6 +110,16 @@ class TableHEADWriter:
             del self.view
             self.buf.close()
         self.f.close()
+
+    def _resolve_pos(self, where):
+        if isinstance(where, str):
+            return self.tab_offset + self.POSITIONS[where]
+        return where
+
+    def goto(self, where):
+        """Go to a named position or absolute offset."""
+        self.ptr = self._resolve_pos(where)
+
     def getlong(self, pos = None):
         """ Get four bytes from the font file as integer number """
         if pos:
@@ -190,19 +200,6 @@ class TableHEADWriter:
         found = self.find_table([ b'head' ], idx)
         if not found:
             raise Exception('No HEAD table found in font idx {}'.format(idx))
-
-
-    def goto(self, where):
-        """ Go to a named location in the file or to the specified index """
-        if isinstance(where, str):
-            positions = {'checksumAdjustment': 2+2+4,
-                         'flags': 2+2+4+4+4,
-                         'lowestRecPPEM': 2+2+4+4+4+2+2+8+8+2+2+2+2+2,
-                         'avgWidth': 2,
-                }
-            where = self.tab_offset + positions[where]
-        self.f.seek(where)
-
 
     def calc_full_checksum(self, check = False):
         """ Calculate the whole file's checksum """
