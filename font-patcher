@@ -168,35 +168,54 @@ class TableHEADWriter:
 
     def find_table(self, tablenames, idx):
         """ Search all tables for one of the tables in tablenames and store its metadata """
-        # Use font with index idx if this is a font collection file
-        self.f.seek(0, 0)
-        tag = self.f.read(4)
+        # parse TTC header or sfnt directory
+        off = 0
+        tag = bytes(self.view[off:off+4])
+        off += 4
+
         if tag == b'ttcf':
-            self.f.seek(2*2, 1)
-            self.num_fonts = self.getlong()
-            if (idx >= self.num_fonts):
-                raise Exception('Trying to access subfont index {} but have only {} fonts'.format(idx, num_fonts))
+            # skip version
+            off += 4
+            self.num_fonts = struct.unpack_from('>I', self.view, off)[0]
+            off += 4
+            if idx >= self.num_fonts:
+                raise Exception('Subfont index {} out of range ({})'.format(idx, self.num_fonts))
+            # read offsets
             for _ in range(idx + 1):
-                offset = self.getlong()
-            self.f.seek(offset, 0)
+                offset = struct.unpack_from('>I', self.view, off)[0]
+                off += 4
+            # go to chosen font
+            off = offset
         elif idx != 0:
-            raise Exception('Trying to access subfont but file is no collection')
+            raise Exception('File is not a collection but idx != 0')
         else:
-            self.f.seek(0, 0)
+            off = 0
             self.num_fonts = 1
 
-        self.f.seek(4, 1)
-        numtables = self.getshort()
-        self.f.seek(3*2, 1)
+        # skip sfnt version
+        off += 4
+        numtables = struct.unpack_from('>H', self.view, off)[0]
+        off += 2
+        # skip searchRange, entrySelector, rangeShift
+        off += 6
 
-        for i in range(numtables):
-            tab_name = self.f.read(4)
-            self.tab_check_offset = self.f.tell()
-            self.tab_check = self.getlong()
-            self.tab_offset = self.getlong()
-            self.tab_length = self.getlong()
-            if tab_name in tablenames:
+        # scan table records
+        for _ in range(numtables):
+            name = bytes(self.view[off:off+4])
+            check_off = off + 4
+            chk = struct.unpack_from('>I', self.view, check_off)[0]
+            toff = struct.unpack_from('>I', self.view, check_off+4)[0]
+            length = struct.unpack_from('>I', self.view, check_off+8)[0]
+
+            if name in tablenames:
+                self.tab_check_offset = check_off
+                self.tab_check = chk
+                self.tab_offset = toff
+                self.tab_length = length
                 return True
+
+            off += 16
+
         return False
 
     def find_head_table(self, idx):
