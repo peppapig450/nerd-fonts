@@ -257,18 +257,6 @@ class TableHEADWriter:
         new_adj = (0xB1B0AFBA - self.calc_full_checksum()) & 0xFFFFFFFF
         self.putlong(new_adj, 'checksumAdjustment')
 
-
-
-    def __init__(self, filename):
-        self.modified = False
-        self.f = open(filename, 'r+b')
-
-        self.find_head_table(0)
-
-        self.flags = self.getshort('flags')
-        self.lowppem = self.getshort('lowestRecPPEM')
-        self.checksum_adj = self.getlong('checksumAdjustment')
-
 def check_panose_monospaced(font):
     """ Check if the font's Panose flags say it is monospaced """
     # https://forum.high-logic.com/postedfiles/Panose.pdf
