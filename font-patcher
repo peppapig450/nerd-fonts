@@ -233,12 +233,11 @@ class TableHEADWriter:
 
     def calc_full_checksum(self, check = False):
         """ Calculate the whole file's checksum """
-        self.f.seek(0, 2)
-        self.end = self.f.tell()
-        full_check = self.calc_checksum(0, self.end, (-self.checksum_adj) & 0xFFFFFFFF)
-        if check and (0xB1B0AFBA - full_check) & 0xFFFFFFFF != self.checksum_adj:
+        init = (-self.checksum_adj) & 0xFFFFFFFF
+        full = self.calc_checksum(0, self.size - 1, init)
+        if check and ((0xB1B0AFBA - full) & 0xFFFFFFFF) != self.checksum_adj:
             sys.exit("Checksum of whole font is bad")
-        return full_check
+        return full
 
     def calc_table_checksum(self, check = False):
         tab_check_new = self.calc_checksum(self.tab_offset, self.tab_offset + self.tab_length - 1, (-self.checksum_adj) & 0xFFFFFFFF)
