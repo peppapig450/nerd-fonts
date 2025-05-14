@@ -150,18 +150,21 @@ class TableHEADWriter:
 
     def calc_checksum(self, start, end, checksum = 0):
         """ Calculate a font table checksum, optionally ignoring another embedded checksum value (for table 'head') """
-        self.f.seek(start)
-        for i in range(start, end - 4, 4):
-            checksum += self.getlong()
-            checksum &= 0xFFFFFFFF
-        i += 4
-        extra = 0
-        for j in range(4):
-            extra = extra << 8
-            if i + j <= end:
-                extra += ord(self.f.read(1))
-        checksum = (checksum + extra) & 0xFFFFFFFF
-        return checksum
+        mask = 0xFFFFFFFF
+        total = checksum & mask
+        # end is inclusive, so slice go through end+1
+        buf = self.view[start:end+1]
+        n_full = len(buf) // 4
+
+        for (word,) in struct.iter_unpack('>I', buf[:n_full*4]):
+            total = (total + word) & mask
+
+        tail = buf[n_full*4:]
+        if tail:
+            extra = int.from_bytes(tail.tobytes().ljust(4, b'\x00'), 'big')
+            total = (total + extra) & mask
+
+        return total
 
     def find_table(self, tablenames, idx):
         """ Search all tables for one of the tables in tablenames and store its metadata """
