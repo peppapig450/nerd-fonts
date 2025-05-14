@@ -94,6 +94,22 @@ class TableHEADWriter:
         self.flags = self.getshort('flags')
         self.lowppem = self.getshort('lowestRecPPEM')
         self.checksum_adj = self.getlong('checksumAdjustment')
+
+    def close(self):
+        if self.modified:
+            if self._is_mmap and isinstance(self.buf, MMapType):
+                self.buf.flush()
+            else:
+                # write back our bytearray to disk
+                self.f.seek(0)
+                self.f.write(self.buf)
+                self.f.truncate(len(self.buf))
+        if self._is_mmap and isinstance(self.buf, MMapType):
+            # release & delete the memoryview so that the mmap can be closed
+            self.view.release()
+            del self.view
+            self.buf.close()
+        self.f.close()
     def getlong(self, pos = None):
         """ Get four bytes from the font file as integer number """
         if pos:
@@ -211,8 +227,6 @@ class TableHEADWriter:
         new_adj = (0xB1B0AFBA - self.calc_full_checksum()) & 0xFFFFFFFF
         self.putlong(new_adj, 'checksumAdjustment')
 
-    def close(self):
-        self.f.close()
 
 
     def __init__(self, filename):
