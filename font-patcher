@@ -89,6 +89,11 @@ class TableHEADWriter:
         self.buf = buf
         self.view = memoryview(self.buf)
         self.ptr = 0        # for methods that read sequentially
+
+        self.find_head_table(0)
+        self.flags = self.getshort('flags')
+        self.lowppem = self.getshort('lowestRecPPEM')
+        self.checksum_adj = self.getlong('checksumAdjustment')
     def getlong(self, pos = None):
         """ Get four bytes from the font file as integer number """
         if pos:
