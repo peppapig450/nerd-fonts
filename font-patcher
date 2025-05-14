@@ -65,6 +65,30 @@ class TableHEADWriter:
         'lowestRecPPEM': 2+2+4+4+4+2+2+8+8+2+2+2+2+2,
         'avgWidth': 2,
     }
+
+    def __init__(self, filename):
+        self.modified = False
+        self.f = open(filename, 'r+b')
+        self.size = os.fstat(self.f.fileno()).st_size
+
+        if HAS_MMAP and mmap:
+            try:
+                buf = mmap.mmap(self.f.fileno(), self.size, access=mmap.ACCESS_WRITE)
+                self._is_mmap = True
+            except (ValueError, OSError):
+                buf = None
+                self._is_mmap = False
+        else:
+            buf = None
+            self._is_mmap = False
+
+        # Fallback to bytearray if mmap not available
+        if buf is None:
+            self.f.seek(0)
+            buf = bytearray(self.f.read())
+        self.buf = buf
+        self.view = memoryview(self.buf)
+        self.ptr = 0        # for methods that read sequentially
     def getlong(self, pos = None):
         """ Get four bytes from the font file as integer number """
         if pos:
